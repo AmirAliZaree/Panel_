@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#020604">
+<title>AMIRALI CONFIG PANEL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#020604;--card:#07100b;--card2:#0a1510;--line:#173c25;--g:#22c55e;--g2:#4ade80;--txt:#eafff0;--muted:#7da88a;--red:#ef4444}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0%,#0a2413 0,transparent 28%),var(--bg);color:var(--txt);font-family:Vazirmatn,sans-serif;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(#22c55e08 1px,transparent 1px),linear-gradient(90deg,#22c55e08 1px,transparent 1px);background-size:36px 36px}
+.wrap{width:min(1180px,calc(100% - 28px));margin:auto;padding:22px 0 40px;position:relative}
+header{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:18px 20px;border:1px solid var(--line);background:#061009d9;border-radius:22px;backdrop-filter:blur(15px);position:sticky;top:12px;z-index:5}
+.brand{display:flex;align-items:center;gap:11px;font-weight:900}.logo{width:42px;height:42px;border:1px solid var(--g);border-radius:13px;display:grid;place-items:center;color:var(--g2);box-shadow:0 0 24px #22c55e22}.brand small{display:block;color:var(--muted);font-size:9px;font-weight:500;margin-top:2px}
+.actions{display:flex;gap:8px}.btn{border:1px solid var(--line);background:#09150e;color:var(--txt);border-radius:12px;padding:10px 14px;font:inherit;font-size:11px;cursor:pointer}.btn.primary{background:var(--g);color:#001b08;border-color:var(--g);font-weight:800}
+.hero{padding:30px 4px 20px}.hero h1{font-size:30px;margin:0 0 7px}.hero p{color:var(--muted);font-size:12px;margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{background:linear-gradient(145deg,#09140d,#040a06);border:1px solid var(--line);border-radius:18px;padding:17px}.stat b{font-size:25px;color:var(--g2)}.stat span{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.panel{margin-top:15px;border:1px solid var(--line);border-radius:20px;background:#061009d9;overflow:hidden}.panelHead{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}.panelHead strong{font-size:13px}.search{background:#030906;border:1px solid var(--line);color:#fff;outline:0;border-radius:11px;padding:10px 12px;font:inherit;font-size:11px;width:230px}
+.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:right;padding:14px 15px;border-bottom:1px solid #102518;font-size:11px}.table th{color:var(--muted);font-weight:500}.table tr:last-child td{border-bottom:0}.user{display:flex;align-items:center;gap:9px}.avatar{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#0b2113;border:1px solid var(--line);color:var(--g2)}.email{font-weight:700}.sub{color:var(--muted);font-size:9px;margin-top:2px}.badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:9px;background:#0b2a16;color:var(--g2);border:1px solid #174e2a}.badge.off{background:#241010;color:#ff8d8d;border-color:#4c1e1e}.copy{padding:7px 9px}
+.empty,.error{padding:35px;text-align:center;color:var(--muted);font-size:12px}.error{color:#ff9a9a}
+@media(max-width:760px){.wrap{width:min(100% - 16px,1180px)}header{position:relative;top:0}.stats{grid-template-columns:repeat(2,1fr)}.table{min-width:760px}.panel{overflow:auto}.panelHead{min-width:760px}.search{width:180px}.hero h1{font-size:24px}.actions .btn:first-child{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand"><div class="logo">A</div><div>AMIRALI CONFIG PANEL<small>PRIVATE SUBSCRIPTION MANAGER</small></div></div>
+  <div class="actions"><button class="btn" onclick="load(true)">↻ بروزرسانی</button><button class="btn primary" onclick="location.reload()">Dashboard</button></div>
+</header>
+
+<section class="hero">
+  <h1>داشبورد کانفیگ‌ها</h1>
+  <p>اتصال امن Backend به پنل ثنایی / 3x-ui</p>
+</section>
+
+<section class="stats">
+  <div class="stat"><b id="total">—</b><span>کل کاربران</span></div>
+  <div class="stat"><b id="active">—</b><span>فعال</span></div>
+  <div class="stat"><b id="traffic">—</b><span>ترافیک مصرفی</span></div>
+  <div class="stat"><b id="expiring">—</b><span>نزدیک انقضا</span></div>
+</section>
+
+<section class="panel">
+  <div class="panelHead"><strong>📡 لیست کانفیگ‌ها</strong><input id="search" class="search" placeholder="جستجوی ایمیل..." oninput="render()"></div>
+  <div id="content" class="empty">در حال دریافت اطلاعات...</div>
+</section>
+</div>
+
+<script>
+let users=[];
+const $=id=>document.getElementById(id);
+function gb(n){return n<1024?`${n.toFixed(1)} MB`:`${(n/1024).toFixed(2)} GB`}
+function date(t){if(!t)return "نامحدود";return new Date(t).toLocaleDateString("fa-IR")}
+async function load(force=false){
+  $("content").className="empty";$("content").textContent="در حال دریافت اطلاعات از پنل...";
+  try{
+    const r=await fetch("/api/users?refresh="+(force?1:0));const d=await r.json();
+    if(!d.ok)throw Error(d.error||"API error");users=d.users||[];render();
+  }catch(e){$("content").className="error";$("content").textContent="خطا در اتصال: "+e.message}
+}
+function render(){
+  const q=$("search").value.trim().toLowerCase();
+  const list=users.filter(u=>(u.email||"").toLowerCase().includes(q));
+  $("total").textContent=users.length;
+  $("active").textContent=users.filter(u=>u.enable).length;
+  const used=users.reduce((s,u)=>s+u.usedGB,0);$("traffic").textContent=used.toFixed(2)+" GB";
+  const week=Date.now()+7*86400000;
+  $("expiring").textContent=users.filter(u=>u.expiryTime>0&&u.expiryTime<week).length;
+  if(!list.length){$("content").className="empty";$("content").textContent="کاربری پیدا نشد.";return}
+  $("content").className="";
+  $("content").innerHTML=`<table class="table"><thead><tr><th>کاربر</th><th>وضعیت</th><th>مصرف</th><th>انقضا</th><th>اتصال</th></tr></thead><tbody>${
+    list.map(u=>`<tr>
+      <td><div class="user"><div class="avatar">●</div><div><div class="email">${esc(u.email)}</div><div class="sub">${esc(u.protocol)} • ${esc(String(u.port))}</div></div></div></td>
+      <td><span class="badge ${u.enable?'':'off'}">${u.enable?'ACTIVE':'DISABLED'}</span></td>
+      <td>${gb(u.usedGB*1024)}${u.totalGB?` / ${gb(u.totalGB/1024/1024/1024)}`:""}</td>
+      <td>${date(u.expiryTime)}</td>
+      <td><button class="btn copy" onclick="sub('${escAttr(u.id)}')">🔗 ساب</button></td>
+    </tr>`).join("")
+  }</tbody></table>`;
+}
+async function sub(id){
+  try{const r=await fetch("/api/sub-link/"+encodeURIComponent(id));const d=await r.json();if(!d.ok)throw Error(d.error);await navigator.clipboard.writeText(new URL(d.url,location.origin).href);alert("لینک Subscription کپی شد.");}catch(e){alert(e.message)}
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function escAttr(s){return String(s??"").replace(/'/g,"&#39;")}
+load();
+</script>
+</body>
+</html>
